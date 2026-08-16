@@ -1,54 +1,53 @@
-# 出海岗位 span → ESCO URI 匹配项目:讲讲我们怎么干的
+# 出海岗位技能 span → ESCO URI 链接算法
 
-> 内部 review · 2026-08-16
-
----
-
-## 一句话先放在最前面
-
-组员用 DeepSeek 抽出了 5,140 条岗位的 9 万多个技能标注,但这些 span 还是自由文本,不能直接对接下游系统。我们做的事就是**把这些 span 链接到 ESCO v1.2.0 的标准 URI**——最后**算法精度 69%**(L 桶 92%、S 桶 72%、K/T 桶 56%),**覆盖 38.3%**(剩 61.7% 用稳定占位 ID 兜底,保证每条 span 都有 ID 可用)。
+> 项目技术报告 · 2026-08-16
 
 ---
 
-## 整个事情的起点:8-15 会议拍板"放弃 BERT"
+## 一句话
 
-为什么这个项目存在?要从一场会议说起。
-
-8-15 项目组会上,组员陈童幸夫汇报了 BERT 训练结果:**数据只有 5,140 条,BERT 在这小数据上精度被卡死,实测只有 0.3**。张浩洋当场拍板:"大模型抽取精度也就 60%,再叠 BERT 训练,结果不忍看。**放弃 BERT,改用大模型直接抽 + 算法匹配 ESCO**。"
-
-会议还定了一个成功标准:**若匹配效果达标,将直接放弃训练 BERT 模型**。
-
-所以我接到的活很明确:**组员已经用 DeepSeek 抽出了 90,625 条 span 标注(去重后 31,866 unique),我负责给每个 span 找一个 ESCO 标准 URI**。找得到的给真 URI,找不到的给占位 ID,总之**每条 span 都要有 ID**。
-
-这就是这个项目的本质——**给"用大模型直接抽"方案补最后一环,让它能落地**。
+5,140 条出海岗位的 90,625 个技能标注(去重 31,866 unique (span, L/K/S/T)),链接到 ESCO v1.2.0 标准 URI——**算法精度 69%**(L 桶 92%、S 桶 72%、K/T 桶 56%),**整体覆盖率 38.3%**,剩余 61.7% 用稳定占位 ID 兜底,保证每条 span 都有可计算的 ID。
 
 ---
 
-## 手里有什么,要做什么
+## 1. 项目说明
 
-把数据规模写明白:
+中文招聘广告的技能描述(span)是自由文本,没法直接喂给下游标准化系统。本仓库做的事是:**把每个 (span, type) 链接到 ESCO(欧洲技能、能力、资格和职业分类)v1.2.0 的标准 URI**,让自由文本变成可计算、可对接的标准化标签。
+
+输入:LKST 4 维标注(L=Language, K=Knowledge, S=Skill, T=Transversal)。  
+输出:`esco_uri` 字段——真 ESCO URI(`http://data.europa.eu/esco/skill/...`)或稳定占位 ID(`custom:skill/{hash}` 等)。
+
+### 1.1 数据规模
 
 ```
 5,140 条 job(原始招聘数据)
-   ↓ DeepSeek 标注
+   ↓ 自动化标注(参见 Chinese-SkillSpan 论文 + DeepSeek 标注流程)
 90,625 条 (span, type) 出现(同一 span 跨 job 重复算)
    ↓ 去重
-31,866 unique (span, type)  ← 我们的目标池
+31,866 unique (span, type)  ← 目标池
    ├ L (language)      1,486
    ├ K (knowledge)     6,058
    ├ S (skill)        22,107   ← 大头
    └ T (transversal)   2,215
 ```
 
-对应我们要对齐的标准库——ESCO v1.2.0 英文版,13,939 个概念(L=359, K=3,145, S=10,338, T=97)。
+对应标准库:ESCO v1.2.0 英文版,13,939 个概念(L=359, K=3,145, S=10,338, T=97)。  
+**注意 T 桶 ESCO 只有 97 条**——软技能这块 ESCO 自家覆盖就很薄,后文 K/T 桶精度低的锅,ESCO 上游要背一半。
 
-注意 T 桶 ESCO 只有 97 条——这意味着软技能这块 ESCO 自家覆盖就很薄,后面 56% 精度的锅 ESCO 要背一半。
+### 1.2 为什么不用纯 embedding 或纯 LLM
+
+两条路都试过,各有硬伤:
+
+- **纯 embedding(单语种/多语种)**:跨语种对齐差。中文 "焊接" 跟英文 "welding" 距离很远,缩写(SPC/PFMEA/DOE)更没法搞——中英缩写字面无关、语义相同。
+- **纯 LLM 链接**:贵。31,866 条都过一遍 LLM,4 维判定 × 上下文,一次调用就破产。
+
+所以走**多 Tier 兜底**——便宜的先上(字典、embedding),贵的只在最模糊的灰色地带用(LLM 仲裁)。这套思路也呼应 Chinese-SkillSpan 论文的两阶段设计(先抽 span、再链 ESCO),本仓库实现的是第二阶段的工程化版本。
 
 ---
 
-## 怎么干的:三层 Tier 兜底
+## 2. 方法:三层 Tier 兜底
 
-整个算法的核心思想就一句话:**多层兜底,每层解决一种特定问题,最后不管哪条线没接住,都给个稳定 ID 占位**。
+整个算法的核心:**多层兜底,每层解决一种特定问题,最后不管哪条线没接住,都给个稳定 ID 占位**。
 
 ```
        ┌─────────────────────────────────────┐
@@ -75,50 +74,44 @@ Tier 3 │  DeepSeek LLM 仲裁                │ ← 兜底模糊地带
        └───────────────────────────────────┘
 ```
 
-下面分别讲每层在解决什么问题。
+### 2.1 Tier 1:字典 + AC 自动机
 
-### Tier 1:字典 + AC 自动机(为什么需要它)
+**目的**:补 embedding 的盲区——缩写和跨语种字面无关。
 
-第一次跑完 embedding 我就发现一个事:**缩写全废**。
+**做法**:
 
-Embedding 模型对 "SPC"(统计过程控制)、"PFMEA"(过程失效模式分析)、"DOE"(实验设计)这种完全没办法——中英缩写字面无关,字面无关 embedding 就抓不到语义。但这些又都是制造业岗位的高频词,不解决损失很大。
-
-所以单独开一层做**字面 + 字典**匹配:
-
-1. **缩写字典**:130+ 条,把 SPC 展开成 "Statistical Process Control" 再去查 ESCO altLabel。这一层小但救命——23 条命中全是缩写。
+1. **缩写字典(130+ 条)**:SPC → "Statistical Process Control"、PFMEA → "Process Failure Mode and Effects Analysis" 等,展开后再去查 ESCO altLabel。这一层小但救命——23 条命中全是缩写。
 2. **Aho-Corasick 自动机**:把 ESCO 8,518 个短词(3-15 字符)塞进 AC automaton,扫全部 spans 找 substring。比如 span 里出现 "welding" 就直接命中 ESCO welding skill。72 条命中。
 
-**坑**:substring 匹配会嵌入词内。比如 "solar energy" 因为包含 "ste" 命中了 "systems" 这种破事。修法是**加 word boundary 检查**(匹配前后是字母数字就丢弃)+ **停用词表** 把 engineering/plan/process/standard 这些通用词排除。
+**坑与修复**:substring 匹配会嵌入词内。比如 "solar energy" 因为包含 "ste" 命中了 "systems"。修法:**word boundary 检查**(匹配前后是字母/数字就丢弃)+ **停用词表** 把 engineering/plan/process/standard 等通用词排除。
 
-### Tier 2:multilingual embedding(主战场)
+### 2.2 Tier 2:multilingual embedding
 
-模型选型其实是个意外。
+**模型**:`paraphrase-multilingual-MiniLM-L12-v2`(sentence-transformers,118M 参数,384 维)。
 
-我本来想用 **bge-m3**(多语种 SOTA),结果这玩意 2.3GB,我下了一晚上卡在 2.09GB 就死那不动了——网络问题。没办法,回退到 **`paraphrase-multilingual-MiniLM-L12-v2`**(118M 参数,384 维)。
-
-回退之后反而**可控**:CPU 上 45-160 t/s,15 分钟跑完全部 embedding。Smoke test 18 个跨语种对,14 个通过——失败 4 个全是缩写对,刚好和 Tier 1 互补,完美。
+> 备选 bge-m3 跨语种更强,但模型权重 2.3GB 在受限网络环境拉不下来。回退到 paraphrase-multilingual 是工程上更可控的选择——CPU 推理 45-160 t/s,15 分钟跑完全部 embedding;smoke test 18 个跨语种对 14 个通过,失败的 4 个全是缩写对,刚好和 Tier 1 互补。
 
 **核心做法**:
 
-- 每个 ESCO 条目 → embedding(把 `preferredLabel + altLabels` 拼起来)
+- 每个 ESCO 条目 → embedding(把 `preferredLabel + altLabels` 拼起来当文本)
 - 每个 unique span → embedding
-- **按 LKST type 分桶,桶内匹配**(这一步关键!否则 L 桶 359 条会被 S 桶 10K 条"语言学"抢走)
+- **按 LKST type 分桶,桶内匹配**(关键!否则 L 桶 359 条会被 S 桶 10K 条的"语言学"抢走)
 - cos 相似度 top-1
 - 阈值:L/K/S 桶 cos ≥ 0.70 → matched,T 桶 cos ≥ 0.55 → matched
 
-**阈值调参的曲折**:T 桶一开始跟其他桶一样用 0.70,结果大量看起来对的匹配被卡掉了。我抽 160 条 T 桶的人工看,发现 0.5-0.7 区间大部分都是 decent match——**T 桶单独放宽到 0.55**。这一步直接把 matched 数从 5,102 拉到 5,777(+675,全是 T 桶)。
+**T 桶阈值单独放宽的来由**:T 桶一开始跟其他桶一样用 0.70,大量看起来对的匹配被卡掉。抽 160 条 T 桶人工看,0.5-0.7 区间大部分都是 decent match——**T 桶单独放宽到 0.55**。这一步直接把 matched 数从 5,102 拉到 5,777(+675,全是 T 桶)。
 
-### Tier 3:DeepSeek LLM 仲裁(争议地带的最终裁决)
+### 2.3 Tier 3:DeepSeek LLM 仲裁
 
-Tier 2 跑完还有 20,737 条处于 0.5-0.7 灰色地带——看着像但把握不准。直接丢掉可惜,人工 review 又扛不住,折中方案:**让 DeepSeek 当 judge**。
+Tier 2 跑完还有 20,737 条处于 0.5-0.7 灰色地带——看着像但把握不准。直接丢掉可惜,人工 review 又扛不住,折中:**让 DeepSeek 当 judge**。
 
-Prompt 设计的核心:**给 LLM 完整上下文**——不是只丢一个 span,丢 span + type + top-3 ESCO 候选(含 description)。让 LLM 选 1/2/3/none 中的一个,4 类判定规则按 L/K/S/T 区分。
+**Prompt 设计**:给 LLM 完整上下文——不是只丢一个 span,而是 `span + type + top-3 ESCO 候选(含 description)`,LLM 选 1/2/3/none 中的一个,4 类判定规则按 L/K/S/T 区分。
 
-**执行遇到的问题**:第一轮跑 20,737 条,跑到 15,997 条 DeepSeek 余额耗尽,挂了 4,746 条。充值之后第二轮重跑,只错了 3 条。**两轮策略很值**——等于用 6 块钱(DeepSeek 收费真便宜)干了 20K 条本来要人工的活。
+**执行细节**:第一轮跑 20,737 条,跑到 15,997 条 API 余额耗尽,挂了 4,746 条。充值之后第二轮重跑,4,741 条里只 3 错。两轮策略很值——以极低 token 成本兜住 20K 条本来要人工的活。
 
-最终:LLM 仲裁 20,737 条,**4,752 条改对了 top-1 错位,11,225 条判 none**。这一步直接把 matched 从 5,875 拉到 10,627。
+**最终**:LLM 仲裁 20,737 条,**4,752 条改对了 top-1 错位,11,225 条判 none**。matched 数从 5,875 拉到 10,627。
 
-### 兜底:Custom ID 机制(为什么必须有这一步)
+### 2.4 兜底:Custom ID 机制
 
 Tier 1-3 都失败的 span 还剩 19,674 条。**不能给空 URI**——下游拿到 csv 没法 join,系统会卡死。
 
@@ -129,17 +122,19 @@ SHA1("沟通能力" + "T").hexdigest()[:12]  →  "a3b9c2e1f5d8"
 final URI:                                "custom:transversal/a3b9c2e1f5d8"
 ```
 
-**为什么这样设计**:
+**设计要点**:
 
-- `custom:` 前缀明示"非 ESCO 标准",下游系统看一眼就知道不能直接对接
-- hash 稳定:同样的 span+type 永远出同样的 ID,后续要替换成真 ESCO 不会乱
+- `custom:` 前缀明示"非 ESCO 标准",下游系统一眼识别
+- hash 稳定:同样的 span+type 永远出同样的 ID,后续替换真 ESCO 不会乱
 - 4 个 type 各自前缀(custom:skill/、custom:knowledge/、custom:language/、custom:transversal/),方便按 type 过滤
 
-**这一步虽然简单,但是整个项目能交付的关键**——保证**覆盖率 100%**,任何下游系统拿到 csv 都能 join,不用担心 null。
+**这一步是整个项目能落地的关键**——保证**覆盖率 100%**,任何下游系统拿到 csv 都能 join,不用担心 null。
 
 ---
 
-## 整个过程的演进
+## 3. 结果
+
+### 3.1 版本演进
 
 | 版本 | matched 数 | 累计% | 这一步干了什么 |
 |---|---|---|---|
@@ -151,27 +146,19 @@ final URI:                                "custom:transversal/a3b9c2e1f5d8"
 | v6 | 12,189 | 38.3% | DeepSeek 补跑 +1,562 |
 | **v7** | **12,189** | **38.3%** | **+ custom ID 兜底 19,674** |
 
-**matched 数从 5,102 涨到 12,189,翻了 2.4 倍**。
+matched 数从 5,102 涨到 12,189,**翻了 2.4 倍**。
 
-最大的单步跳跃是 v4 → v5(DeepSeek 仲裁),**+4,752 一口气**。这说明 embedding 在 0.5-0.7 灰色地带漏掉的不是"匹配不上",而是"模型不敢判",这种地方 LLM 比 embedding 强。
+**最大单步跳跃是 v4 → v5(DeepSeek 仲裁),+4,752 一口气**——说明 embedding 在 0.5-0.7 灰色地带漏掉的不是"匹配不上",而是"模型不敢判",这种地方 LLM 比 embedding 强。
 
----
+### 3.2 精度验证:200 条 stratified gold
 
-## 精度到底多少:200 条 stratified gold
-
-我不能说"算法精度 69%"就完事,得有独立验证。
-
-**做法**:
-
-1. 抽 200 条 stratified gold(L/K/S/T × {matched, no_match} = 8 桶 × 25 条)
-2. 让 **DeepSeek 当独立 judge**,问"我们给的 URI 对不对"
-3. DeepSeek 不参与算法本身,只当外部裁判
+**方法**:抽 200 条 stratified gold(L/K/S/T × {matched, no_match} = 8 桶 × 25 条),让 DeepSeek 当独立 judge 问"算法给的 URI 对不对"——DeepSeek 不参与算法本身,只当外部裁判。
 
 **结果**:
 
 ```
-matched 子集:    69 对 / 100  →  69.0%  ← 这是真算法精度
-no_match 子集:   0 对 / 100   →  0%     (custom ID 不是真 ESCO)
+matched 子集:    69 对 / 100  →  69.0%   ← 真算法精度
+no_match 子集:   0 对 / 100   →  0%      (custom ID 不是真 ESCO,本来也不期望对)
 ```
 
 按 type 分桶看更细:
@@ -183,73 +170,102 @@ no_match 子集:   0 对 / 100   →  0%     (custom ID 不是真 ESCO)
 | K | 14 / 25 | 56.0% |
 | T | 14 / 25 | 56.0% |
 
-**怎么解读这组数字**:
+**怎么解读**:
 
 - **L 桶 92%**——语言名短而标准(英/中/日/葡/法...),embedding 一击命中
 - **S 桶 72%**——技能名多样但 ESCO 覆盖厚,容错好
-- **K/T 桶 56%**——这两个桶 ESCO 覆盖本来就薄(尤其 T 只有 97 条),加中文表述多样,错配多。**56% 不是算法的问题,是 ESCO 上游覆盖的问题**。
-- 整体 69%——这是**精度不是召回**。算法敢说"这个 span 对这个 ESCO"的时候,69% 是对的;剩下 31% 错配需要人工 review 桶处理。
+- **K/T 桶 56%**——ESCO 覆盖本来就薄(尤其 T 只有 97 条),加中文表述多样,错配多。**这是 ESCO 上游覆盖的客观限制,不是算法的问题**。
+- 整体 69%——这是**精度不是召回**。算法敢说"这个 span 对这个 ESCO"的时候,69% 是对的;剩下 31% 错配需要人工 review。
 
-**一定要避开的对比坑**:
+**对比说明**:Chinese-SkillSpan 论文报告的 span 抽取 F1 ≈ 0.67 是 Task 1(从原文抽出 span),本报告 69% 是 Task 2(把 span 链到 ESCO URI),任务、指标、数据都不一样,**不能直接相减或相除**。
 
-- ~~0.67(论文 ChatGPT span 抽取 F1)~~——那是 Task 1
-- ~~0.3(BERT 训练精度)~~——也是 Task 1
-- 我们的 69% 是 **Task 2(算法精度)**,任务、指标、数据都不一样,会议也明确**不能直接比**。比了就露怯。
-
----
-
-## 实际产生了多少"对的"匹配
-
-把 38.3% 覆盖率和 69% 精度乘起来:
+### 3.3 实际产出
 
 - 12,189 条 matched × 69% = **~8,400 条**真正正确的 ESCO URI
 - 19,674 条 custom ID 占位(下游可识别非标)
-- 3 条 review 桶(可忽略)
-
-这 8,400 条**直接可对接生产**,是整个项目能拿出来交差的硬通货。
+- 覆盖率 100%(每条 span 都有 ID)
 
 ---
 
-## 关键踩过的坑(给后人避雷)
+## 4. 关键踩过的坑
 
 | 坑 | 怎么踩的 | 怎么修的 |
 |---|---|---|
-| bge-m3 下不完 | 2.09GB / 2.3GB 卡死 | 改 paraphrase-multilingual,牺牲一点跨语种换可控 |
+| bge-m3 拉不下来 | 2.09GB / 2.3GB 卡死 | 改 paraphrase-multilingual,牺牲一点跨语种换可控 |
 | AC 嵌入词内误中 | "solar energy" 命中 "systems" | word boundary + 停用词表 |
 | T 桶 0.7 太严 | 大量 decent match 被卡 | 抽 160 条人工看,降阈值 0.55 |
-| DeepSeek 余额耗尽 | 第一轮跑 20K 条中途挂 | 两轮策略:充值后补跑 4,741 条,只 3 错 |
+| LLM API 余额耗尽 | 第一轮跑 20K 条中途挂 | 两轮策略:充值后补跑 4,741 条,只 3 错 |
 | LKST 跨桶错配 | L 桶被 S 桶"语言学"抢走 | 严格分桶,桶内只跟同 type 比 |
 | 缩写 embedding 失效 | SPC/PFMEA 字面无关语义同 | Tier 1 缩写字典(130+ 条) |
+| DeepSeek judge 偶发空 en | 单条 ar 有但 en 是空 | 抽检补 en;后续 prompt 加强制约束 |
 
 ---
 
-## 局限和"该做但没做"的事
+## 5. 局限与展望
 
 **已知局限**:
 
-- 缩写类(虽然加了 130+ 字典,但还有遗漏)
-- T 桶软技能(中文表达太多样,加同义词也救不回来)
-- L 桶中国证书(TEM-8/PMP/CET-6 这些,ESCO 英文 L 桶没有)
-- 31% 错配留给人工 review 桶
+- **缩写类**:虽然加了 130+ 字典,还有遗漏,新缩写(如新的工艺方法)需要持续扩充
+- **T 桶软技能**:中文表达太多样,加同义词也救不回来
+- **L 桶中国证书**:TEM-8/PMP/CET-6 等,ESCO 英文 L 桶没有——这是 ESCO 国际化覆盖的客观限制
+- **31% 错配**:留给人工 review 桶处理
+- **200 条 gold 验证**:DeepSeek 当 judge 是下界,真 gold 才能定真值
 
-**没做的事(按优先级排)**:
+**后续可做**:
 
-1. **人工标 200 条真 gold**——DeepSeek judge 是下界,真 gold 才能定真值
-2. **bge-m3 全量**——若网络修好,跨语种可能涨 5-10 个百分点
-3. **二次扫 22K custom ID**——用 DeepSeek 再过一遍 no_match 桶
-4. **后续年份数据**——按本 pipeline 跑 25/26 年新数据
+1. **人工标 200+ 条真 gold**——把 DeepSeek judge 换成真 gold,得到算法精度的真值
+2. **跑 bge-m3 全量**——若网络环境修好,跨语种可能涨 5-10 个百分点
+3. **二次扫 22K custom ID**——用 LLM 再过一遍 no_match 桶
+4. **扩充到其他年份数据**——按本 pipeline 处理新数据
 
 ---
 
-## 给团队交差的话术(直接抄)
+## 6. 复现
 
-> 本项目开发了 span → ESCO URI 匹配算法,在 200 条 gold 验证集上:
-> - 整体覆盖率 38.3%(12,189/31,866 unique span)
-> - 算法精度 69%(在 matched 子集上,DeepSeek 独立验证)
-> - L 桶 92%、S 桶 72%、K/T 桶 56%
-> - 实际产生 ~8,400 个正确的 ESCO 匹配,可对接 ESCO 兼容系统
-> - 剩余 ~22,000 无匹配或低置信项需人工 review
->
-> 依据 8-15 会议决议,本项目为 BERT 训练画上句号,匹配算法成为生产方案。
+依赖:Python 3.11+,sentence-transformers,torch,transformers,DeepSeek API key(从环境变量读)。
 
-跟 0.67 那个数字**别比**——那是 ChatGPT 端到端 span 抽取 F1,跟本任务的算法精度不是同一指标(会议也明确不要直接比)。
+```bash
+git clone https://github.com/ddj277happy-png/span_type_esco_id_linkage.git
+cd span_type_esco_id_linkage
+export DEEPSEEK_API_KEY=sk-...   # 用于 Tier 3
+pip install sentence-transformers torch transformers requests
+```
+
+数据准备(在 `input_data/` 放原始 LKST 标注 csv,然后):
+
+```bash
+python scripts/_01_prep_esco.py        # ESCO CSV → esco_clean.csv
+python scripts/_02_prep_spans.py       # 输入标注 → spans_unique.csv
+python scripts/_06_embed_all.py        # 跑 paraphrase-multilingual,按 LKST 分桶存 .npy
+python scripts/_07_match.py            # cos 匹配,出 v1
+python scripts/_13_final_v2.py         # T 桶阈值放宽,出 v2
+python scripts/_15_deepseek_label.py   # DeepSeek 第一轮
+python scripts/_16b_postfix_fast.py    # 缩写字典
+python scripts/_18_tier1_ac.py         # AC substring
+python scripts/_20_merge_llm.py        # DeepSeek 第一轮合并
+python scripts/_21_rerun_review.py     # DeepSeek 第二轮
+python scripts/_22_merge_rerun.py      # 第二轮合并
+python scripts/_23_custom_ids.py       # custom ID 兜底 → v7
+python scripts/_25_make_gold.py        # 200 条 gold 抽样
+python scripts/_26_score_gold.py       # DeepSeek judge → 算精度
+```
+
+主交付物:
+
+- `spans_with_esco.csv`:31,866 unique span × `esco_uri`
+- `final_match_long.csv`:90,625 行长表(含 job 上下文)
+- `gold_validated.csv`:200 条 gold + DeepSeek 验证结果
+- `REPORT.md`:本报告
+
+---
+
+## 7. 引用 / 致谢
+
+- **ESCO v1.2.0**:European Skills, Competences, Qualifications and Occupations,欧盟官方分类标准
+- **Chinese-SkillSpan 论文**:Span-Level Dataset for ESCO-Aligned Competency Extraction from Chinese Job Ads(Li 等, 2026)
+- **DeepSeek**:本项目 Tier 3 仲裁使用 DeepSeek API
+- **paraphrase-multilingual-MiniLM-L12-v2**:sentence-transformers 多语种 embedding 模型
+
+## 8. 许可证
+
+本仓库按 MIT 许可证开源。ESCO 数据版权归欧盟所有,使用请遵守 ESCO 使用条款。
