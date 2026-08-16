@@ -1,0 +1,27 @@
+﻿span,type,esco_uri,esco_label_en,score,match_kind
+SPC,K,http://data.europa.eu/esco/skill/0c77bcd5-b94a-475d-98e9-5a4327e4d726,statistical process control,0.95,abbrev_K
+FTA,K,http://data.europa.eu/esco/skill/12b5cc46-bf35-464c-ac7d-1bdbc23262f7,perform failure analysis of production process,0.95,abbrev_S
+TPM,K,http://data.europa.eu/esco/skill/82fea746-853f-4f1b-8ab7-55de8619cccd,lean manufacturing,0.95,abbrev_K
+PLC,K,http://data.europa.eu/esco/skill/6468e5fb-f3be-4025-87be-4b6556755c61,programmable logic controller,0.95,abbrev_K
+MySQL,K,http://data.europa.eu/esco/skill/4da171e5-779c-4983-a76f-91c16751e99f,MySQL,0.95,abbrev_K
+Java,S,http://data.europa.eu/esco/skill/19a8293b-8e95-4de3-983f-77484079c389,Java (computer programming),0.95,abbrev_K
+C#,S,http://data.europa.eu/esco/skill/4c016b68-4116-468c-9dc6-42710c239e4a,C#,0.95,abbrev_K
+SPC,S,http://data.europa.eu/esco/skill/0c77bcd5-b94a-475d-98e9-5a4327e4d726,statistical process control,0.95,abbrev_K
+Python,S,http://data.europa.eu/esco/skill/ccd0a1d9-afda-43d9-b901-96344886e14d,Python (computer programming),0.95,abbrev_K
+MySQL,S,http://data.europa.eu/esco/skill/4da171e5-779c-4983-a76f-91c16751e99f,MySQL,0.95,abbrev_K
+PLC,S,http://data.europa.eu/esco/skill/6468e5fb-f3be-4025-87be-4b6556755c61,programmable logic controller,0.95,abbrev_K
+CSS,S,http://data.europa.eu/esco/skill/c2999f0c-eb37-4cdf-b9b0-82107b628794,style sheet languages,0.95,abbrev_K
+SEM,S,http://data.europa.eu/esco/skill/eda4d727-4374-49af-ace4-118c7c906835,search engine optimisation,0.95,abbrev_K
+PostgreSQL,S,http://data.europa.eu/esco/skill/a8d07b5a-c1a1-42c6-9d53-db9c7a2ca996,PostgreSQL,0.95,abbrev_K
+TensorFlow,S,http://data.europa.eu/esco/skill/7b0d5000-00da-4864-b776-6de49a87a669,computer vision,0.95,abbrev_K
+CRM,S,http://data.europa.eu/esco/skill/dc9a236c-c640-43c3-812f-269403591edb,customer relationship management,0.95,abbrev_K
+FTA,S,http://data.europa.eu/esco/skill/12b5cc46-bf35-464c-ac7d-1bdbc23262f7,perform failure analysis of production process,0.95,abbrev_S
+Angular,S,http://data.europa.eu/esco/skill/1ffac4ac-fda7-407d-8ed1-ca8f4a8dc146,Angular,0.95,abbrev_K
+Hadoop,S,http://data.europa.eu/esco/skill/e46291c7-52b9-4174-bd59-178884861038,Hadoop,0.95,abbrev_K
+Spark,S,http://data.europa.eu/esco/skill/af7ae54f-4649-4c16-87c7-59ba41d4d57f,SPARK,0.95,abbrev_K
+SEO,S,http://data.europa.eu/esco/skill/eda4d727-4374-49af-ace4-118c7c906835,search engine optimisation,0.95,abbrev_K
+IE,S,http://data.europa.eu/esco/skill/a1816dfd-dbdc-4499-bef3-ff81dd895b33,industrial engineering,0.95,abbrev_K
+JS,S,http://data.europa.eu/esco/skill/3cd569a2-4f88-4c1e-9995-8dce8c5e51a7,JavaScript,0.95,abbrev_K
+分析能力,T,http://data.europa.eu/esco/skill/4707da90-9cfc-46ca-8de0-38a0b7bfb137,think analytically,0.9,t_synonym
+分析问题,T,http://data.europa.eu/esco/skill/4707da90-9cfc-46ca-8de0-38a0b7bfb137,think analytically,0.9,t_synonym
+逻辑分析,T,http://data.europa.eu/esco/skill/4707da90-9cfc-46ca-8de0-38a0b7bfb137,think analytically,0.9,t_synonym

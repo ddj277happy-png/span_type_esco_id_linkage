@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.venv/
+venv/
+.env
+
+# 大文件 / 缓存(可从 scripts 复现)
+embeddings/
+models/
+*.npy
+
+# 组员原始数据(input_data/ 是组员 step3 标注的产物,不在本仓库范围)
+input_data/
+
+# ESCO 原始 CSV(可从官方下载,scripts/ 里 _download_esco_en.py 复现)
+esco/
+
+# 根目录下的所有临时文件(探索/失败/一次性)
+/_*.py
+/_*.txt
+/_*.log
+/_*.err.log
+/_*.err
+/_*.out
+/_*.out2
+/_*.json
+/_*.csv
+/项目报告_2026-08-16.md
+/_prompt_*.txt
+/_llm_*.txt
+/_pdf_*.txt
+/_rag.txt
+/_v7_stats.txt
+/_pip.log
+
+# 中间演进快照(信息已写入 REPORT.md,免得仓库臃肿)
+final_match.csv
+final_match_v1.csv
+final_match_v2.csv
+final_match_v3.csv
+final_match_v4.csv
+final_match_v5.csv
+final_match_v6.csv
+llm_labels.csv
+llm_labels_v2.csv
+
+# 早期报告(已被 REPORT.md 替代)
+review_sample.md
+QA_report.md
+
+# 临时 prompt / LLM 输出(脚本里会重生成)
+_prompt_*.txt
+_llm_raw_*.txt
+_out_*.txt
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log

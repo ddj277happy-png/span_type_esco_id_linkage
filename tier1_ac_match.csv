@@ -1,0 +1,73 @@
+﻿span,type,esco_uri,esco_label_en,target_lkst,matched_token,score,match_kind
+PRINCE2,L,http://data.europa.eu/esco/skill/bec4359e-cb92-468f-a997-8fb28e32fba9,ICT project management methodologies,K,prince2,0.55,tier1_ac
+PDCA,K,http://data.europa.eu/esco/skill/82fea746-853f-4f1b-8ab7-55de8619cccd,lean manufacturing,K,pdca,0.75,tier1_ac
+PRINCE2,K,http://data.europa.eu/esco/skill/bec4359e-cb92-468f-a997-8fb28e32fba9,ICT project management methodologies,K,prince2,0.75,tier1_ac
+low voltage components/cabinet,K,http://data.europa.eu/esco/skill/1fea0bc2-a6fa-4fe8-b36f-7a3194f8ed1c,electricity principles,K,voltage,0.75,tier1_ac
+selected database(s),K,http://data.europa.eu/esco/skill/43ae58b9-5e56-4524-b45a-b422777a0576,database,K,database,0.75,tier1_ac
+DXL scripting,K,http://data.europa.eu/esco/skill/b105ec9b-0857-41d6-8d07-a83e58b73d90,ICT system programming,K,scripting,0.75,tier1_ac
+Biotechnology,K,http://data.europa.eu/esco/skill/61bef658-d7f9-4759-b1b0-0f9cb3bc581a,biotechnology,K,biotechnology,0.75,tier1_ac
+FOB（Free on Board）,K,http://data.europa.eu/esco/skill/3362724b-fe06-4c5d-89a4-76fe62b9268e,scaffolding components,K,board,0.75,tier1_ac
+“FOB（Free on Board）”,K,http://data.europa.eu/esco/skill/3362724b-fe06-4c5d-89a4-76fe62b9268e,scaffolding components,K,board,0.75,tier1_ac
+database(s),K,http://data.europa.eu/esco/skill/43ae58b9-5e56-4524-b45a-b422777a0576,database,K,database,0.75,tier1_ac
+Google/Facebook/Tiktok等广告投放逻辑,K,http://data.europa.eu/esco/skill/4bf59dde-8a03-483f-976a-45764f1e6d6f,search engines,K,google,0.75,tier1_ac
+PYTHON,S,http://data.europa.eu/esco/skill/ccd0a1d9-afda-43d9-b901-96344886e14d,Python (computer programming),K,python,0.55,tier1_ac
+python,S,http://data.europa.eu/esco/skill/ccd0a1d9-afda-43d9-b901-96344886e14d,Python (computer programming),K,python,0.55,tier1_ac
+mysql,S,http://data.europa.eu/esco/skill/4da171e5-779c-4983-a76f-91c16751e99f,MySQL,K,mysql,0.55,tier1_ac
+Google,S,http://data.europa.eu/esco/skill/4bf59dde-8a03-483f-976a-45764f1e6d6f,search engines,K,google,0.55,tier1_ac
+MS VISIO,S,http://data.europa.eu/esco/skill/86f7126d-97fd-4da5-be96-d1cf6ecd54e6,Microsoft Visio,K,ms visio,0.55,tier1_ac
+Android APP开发,S,http://data.europa.eu/esco/skill/d8829a1d-dbde-435b-b921-29d6462f35c9,Android (mobile operating systems),K,android,0.55,tier1_ac
+Cobol,S,http://data.europa.eu/esco/skill/def007fa-5fed-4a5f-91a2-b0d7e3db1be1,COBOL,K,cobol,0.55,tier1_ac
+JavaScript,S,http://data.europa.eu/esco/skill/3cd569a2-4f88-4c1e-9995-8dce8c5e51a7,JavaScript,K,javascript,0.55,tier1_ac
+COBOL,S,http://data.europa.eu/esco/skill/def007fa-5fed-4a5f-91a2-b0d7e3db1be1,COBOL,K,cobol,0.55,tier1_ac
+OpenCV,S,http://data.europa.eu/esco/skill/7b0d5000-00da-4864-b776-6de49a87a669,computer vision,K,opencv,0.55,tier1_ac
+SQL Server,S,http://data.europa.eu/esco/skill/c062bab3-3ea0-4291-9220-a2d8fef4bead,SQL Server,K,sql server,0.55,tier1_ac
+javascript,S,http://data.europa.eu/esco/skill/3cd569a2-4f88-4c1e-9995-8dce8c5e51a7,JavaScript,K,javascript,0.55,tier1_ac
+selenium,S,http://data.europa.eu/esco/skill/7557f0f4-b8bc-4ac0-b91e-222ab1ba744f,tools for ICT test automation,K,selenium,0.55,tier1_ac
+Devops,S,http://data.europa.eu/esco/skill/f0de4973-0a70-4644-8fd4-3a97080476f4,DevOps,K,devops,0.55,tier1_ac
+labview,S,http://data.europa.eu/esco/skill/21d2f96d-35f7-4e3f-9745-c533d2dd6e97,computer programming,K,labview,0.55,tier1_ac
+literature surveillance,S,http://data.europa.eu/esco/skill/0ab9d433-10e5-4683-ae54-4687179a5259,literature,K,literature,0.55,tier1_ac
+spark,S,http://data.europa.eu/esco/skill/af7ae54f-4649-4c16-87c7-59ba41d4d57f,SPARK,K,spark,0.55,tier1_ac
+Frontend（Vue/React/Angular）,S,http://data.europa.eu/esco/skill/1ffac4ac-fda7-407d-8ed1-ca8f4a8dc146,Angular,K,angular,0.55,tier1_ac
+Microsoft office software,S,http://data.europa.eu/esco/skill/cf310cff-0d28-4dbc-9dbb-cc500a3196c2,office software,K,office software,0.55,tier1_ac
+trouble shooting,S,http://data.europa.eu/esco/skill/eb3aa3a8-6ece-441d-9041-15dcb0880e47,cinematography,K,shooting,0.55,tier1_ac
+Conduct supplier quality training,S,http://data.europa.eu/esco/skill/53103efa-a525-4a5b-81e5-282c4331e72c,programme work according to incoming orders,S,conduct,0.75,tier1_ac
+Conduct supplier audits,S,http://data.europa.eu/esco/skill/53103efa-a525-4a5b-81e5-282c4331e72c,programme work according to incoming orders,S,conduct,0.75,tier1_ac
+Pvsyst,S,http://data.europa.eu/esco/skill/8248a071-5307-4a64-a62d-643a35ec31e2,types of photovoltaic panels,K,pvsyst,0.55,tier1_ac
+防火墙&交换机(Fortinet&Cisco),S,http://data.europa.eu/esco/skill/709ef32a-7435-48e2-8fa2-16e389ecab8a,Cisco,K,cisco,0.55,tier1_ac
+Matlab/Simulink,S,http://data.europa.eu/esco/skill/c3a03c5a-c260-4c26-9b9a-873abb396f4d,MATLAB,K,matlab,0.55,tier1_ac
+Access,S,http://data.europa.eu/esco/skill/3d03c40c-1b83-4793-8902-2523f40af59e,Microsoft Access,K,access,0.55,tier1_ac
+"Manage quality issues (CCAR, NCR)",S,http://data.europa.eu/esco/skill/35ebe444-9ece-4fbc-a55d-e99ea37267ae,manage quality,T,manage quality,0.55,tier1_ac
+Conduct quality training,S,http://data.europa.eu/esco/skill/53103efa-a525-4a5b-81e5-282c4331e72c,programme work according to incoming orders,S,conduct,0.75,tier1_ac
+Strong data analysis ability,S,http://data.europa.eu/esco/skill/7ee4c2ea-b349-4bd2-81a3-ec31475d4833,statistics,K,data analysis,0.55,tier1_ac
+Optimize process control,S,http://data.europa.eu/esco/skill/bf1f763e-c505-46e7-8af3-e48f13ec5f44,control engineering,K,process control,0.55,tier1_ac
+Google SEO,S,http://data.europa.eu/esco/skill/4bf59dde-8a03-483f-976a-45764f1e6d6f,search engines,K,google,0.55,tier1_ac
+Involving in consultant works and working on deep market analysis,S,http://data.europa.eu/esco/skill/b011c8b4-76e1-4bbc-8bb9-1d205e7b618a,market analysis,K,market analysis,0.55,tier1_ac
+"Keyboard-oriented, familiar with Internet and Office software (i.e. Word, Excel, PPT)",S,http://data.europa.eu/esco/skill/cf310cff-0d28-4dbc-9dbb-cc500a3196c2,office software,K,office software,0.55,tier1_ac
+decide upon the release state of system specification,S,http://data.europa.eu/esco/skill/d62d2b4c-a6f8-439e-8a1b-4f29ab5f2c47,make decisions,T,decide,0.55,tier1_ac
+risk analysis,S,http://data.europa.eu/esco/skill/8744f28f-59a9-45af-8ef6-6944cb5a1473,risk identification,K,risk analysis,0.55,tier1_ac
+google,S,http://data.europa.eu/esco/skill/4bf59dde-8a03-483f-976a-45764f1e6d6f,search engines,K,google,0.55,tier1_ac
+绘图（Oxygen、AI、Visio）,S,http://data.europa.eu/esco/skill/fb8464e3-949e-4cc0-b50b-be7cf9c3e250,basic chemicals,K,oxygen,0.55,tier1_ac
+Jenkins,S,http://data.europa.eu/esco/skill/f47a1998-0beb-43be-9f46-380aa4d183da,Jenkins (tools for software configuration management),K,jenkins,0.55,tier1_ac
+Android,S,http://data.europa.eu/esco/skill/d8829a1d-dbde-435b-b921-29d6462f35c9,Android (mobile operating systems),K,android,0.55,tier1_ac
+GOOGLE,S,http://data.europa.eu/esco/skill/4bf59dde-8a03-483f-976a-45764f1e6d6f,search engines,K,google,0.55,tier1_ac
+choose the appropriate suppliers,S,http://data.europa.eu/esco/skill/d62d2b4c-a6f8-439e-8a1b-4f29ab5f2c47,make decisions,T,choose,0.55,tier1_ac
+release Purchase Order in ERP,S,http://data.europa.eu/esco/skill/9e9a4209-c7cf-4f6e-973e-dc2ffadccc74,perform procurement processes,S,purchase,0.75,tier1_ac
+monthly check goods receipt with invoice receipt of suppliers,S,http://data.europa.eu/esco/skill/2cae39d6-78c2-4ce3-bee8-628504371463,receive goods,S,goods receipt,0.75,tier1_ac
+MATLAB/Simulink,S,http://data.europa.eu/esco/skill/c3a03c5a-c260-4c26-9b9a-873abb396f4d,MATLAB,K,matlab,0.55,tier1_ac
+administrative and logistics services,S,http://data.europa.eu/esco/skill/e843973c-23dd-416a-8a9c-9e89512542fb,logistics,K,logistics,0.55,tier1_ac
+working on deep market analysis,S,http://data.europa.eu/esco/skill/b011c8b4-76e1-4bbc-8bb9-1d205e7b618a,market analysis,K,market analysis,0.55,tier1_ac
+Office software,S,http://data.europa.eu/esco/skill/cf310cff-0d28-4dbc-9dbb-cc500a3196c2,office software,K,office software,0.55,tier1_ac
+Android app类开发,S,http://data.europa.eu/esco/skill/d8829a1d-dbde-435b-b921-29d6462f35c9,Android (mobile operating systems),K,android,0.55,tier1_ac
+Google Analytics,S,http://data.europa.eu/esco/skill/4bf59dde-8a03-483f-976a-45764f1e6d6f,search engines,K,google,0.55,tier1_ac
+Android SDK,S,http://data.europa.eu/esco/skill/d8829a1d-dbde-435b-b921-29d6462f35c9,Android (mobile operating systems),K,android,0.55,tier1_ac
+release Purchase Order,S,http://data.europa.eu/esco/skill/9e9a4209-c7cf-4f6e-973e-dc2ffadccc74,perform procurement processes,S,purchase,0.75,tier1_ac
+check goods receipt,S,http://data.europa.eu/esco/skill/2cae39d6-78c2-4ce3-bee8-628504371463,receive goods,S,goods receipt,0.75,tier1_ac
+Coordinate with warehouse and planning,S,http://data.europa.eu/esco/skill/7afb5a64-e574-421a-bb3a-7a7bc108d2a5,perform warehousing operations,S,warehouse,0.75,tier1_ac
+6 Sigma,S,http://data.europa.eu/esco/skill/4c2c72df-3f3f-48e7-9993-a602354a75e4,six sigma methods,K,6 sigma,0.55,tier1_ac
+Google SEO及SEM,S,http://data.europa.eu/esco/skill/4bf59dde-8a03-483f-976a-45764f1e6d6f,search engines,K,google,0.55,tier1_ac
+python/flask,S,http://data.europa.eu/esco/skill/ccd0a1d9-afda-43d9-b901-96344886e14d,Python (computer programming),K,python,0.55,tier1_ac
+swift,S,http://data.europa.eu/esco/skill/be80acfc-b6f2-4411-9b8d-b19d9cd2556a,Swift (computer programming),K,swift,0.55,tier1_ac
+Ansible,S,http://data.europa.eu/esco/skill/6f8a40d6-f9ce-43ec-a72f-d4213a53f3ed,Ansible,K,ansible,0.55,tier1_ac
+Develop business growth in OEM customer (Current/New OEM),S,http://data.europa.eu/esco/skill/1fea0bc2-a6fa-4fe8-b36f-7a3194f8ed1c,electricity principles,K,current,0.55,tier1_ac
+Lead & help the team members,T,http://data.europa.eu/esco/skill/75d8e5d9-bef3-418b-9011-01bff9f27207,lead others,T,lead,0.75,tier1_ac
+Coordinate with warehouse and planning,T,http://data.europa.eu/esco/skill/7afb5a64-e574-421a-bb3a-7a7bc108d2a5,perform warehousing operations,S,warehouse,0.55,tier1_ac
