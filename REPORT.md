@@ -231,7 +231,7 @@ export DEEPSEEK_API_KEY=sk-...   # 用于 Tier 3
 pip install sentence-transformers torch transformers requests
 ```
 
-数据准备(在 `input_data/` 放原始 LKST 标注 csv,然后按步骤执行):
+数据准备:把原始 LKST 标注 CSV 放到 `input_data/step3_skill_annotation.csv`(格式约定见 [`data/input_format.md`](data/input_format.md),参考 `data/input_sample.csv`),然后按步骤执行:
 
 ```bash
 # 01 数据准备

@@ -27,6 +27,8 @@
 | unique (span, type) | **31,866** | 去重后待匹配 |
 | ESCO v1.2.0 概念 | 13,939 | L=359, K=3,145, S=10,338, T=97 |
 
+**输入数据约定**:算法的输入是 LKST 4 维标注后的 CSV(11 列),格式详见 [`data/input_format.md`](data/input_format.md),参考示例见 `data/input_sample.csv`。原始招聘数据放 `input_data/`(被 .gitignore 排除,本地保留)。
+
 ## 3. 算法设计 — 3 层 Tier 兜底
 
 ```
@@ -163,7 +165,9 @@ span_type_esco_id_linkage/
 │
 ├── data/                      # 标准库与输入数据
 │   ├── esco_clean.csv         # 13,939 ESCO 概念 + LKST 映射
-│   └── spans_unique.csv       # 31,866 unique (span, type) 池
+│   ├── spans_unique.csv       # 31,866 unique (span, type) 池
+│   ├── input_format.md        # 输入 CSV 格式约定(11 列 + LKST 体系)
+│   └── input_sample.csv       # 1 行虚构示例(不放真实数据)
 │
 ├── pipeline/                  # 主流水线(按步骤分目录)
 │   ├── 01_数据准备/
@@ -238,6 +242,51 @@ span_type_esco_id_linkage/
 - [ ] 收集 3 个版本数据(每年 5,000+ job),用本算法批处理
 - [ ] 对 22K custom ID 做二次 LLM 扫一遍,看有没有遗漏的 ESCO
 
-## 11. 一句话总结
+## 11. 复现
 
-我们做了一个 3 层兜底的 span → ESCO URI 匹配算法,DeepSeek 验证精度 69%(L 桶 92%),覆盖 38.3% span 出真 ESCO URI,剩下的用稳定 custom ID 占位,全员 100% 有 ID 可用。**项目交付完成。**
+依赖:Python 3.11+、`sentence-transformers`、`torch`、`transformers`、`requests`,以及环境变量 `DEEPSEEK_API_KEY`(用于 Tier 3)。
+
+```bash
+git clone https://github.com/ddj277happy-png/span_type_esco_id_linkage.git
+cd span_type_esco_id_linkage
+export DEEPSEEK_API_KEY=sk-...
+pip install sentence-transformers torch transformers requests
+```
+
+把 LKST 标注 CSV 放到 `input_data/step3_skill_annotation.csv`(格式见 [`data/input_format.md`](data/input_format.md),参考 `data/input_sample.csv`),然后:
+
+```bash
+# 01 数据准备
+python pipeline/01_数据准备/_01_prep_esco.py        # ESCO CSV → data/esco_clean.csv
+python pipeline/01_数据准备/_02_prep_spans.py       # 输入标注 → data/spans_unique.csv
+
+# 02 Embedding 生成
+python pipeline/02_Embedding生成/_06_embed_all.py  # → embeddings/
+
+# 03 基础匹配
+python pipeline/03_基础匹配/_07_match.py            # cos 匹配,出 v1
+python pipeline/03_基础匹配/_13_final_v2.py         # T 桶阈值放宽,出 v2
+
+# 05 字典 + AC
+python pipeline/05_字典与AC/_16b_postfix_fast.py    # 缩写字典
+python pipeline/05_字典与AC/_18_tier1_ac.py         # AC substring
+
+# 06 DeepSeek 仲裁
+python pipeline/06_DeepSeek仲裁/_15_deepseek_label.py
+python pipeline/06_DeepSeek仲裁/_21_rerun_review.py
+
+# 07 合并 + 兜底
+python pipeline/07_合并与兜底/_20_merge_llm.py
+python pipeline/07_合并与兜底/_22_merge_rerun.py
+python pipeline/07_合并与兜底/_23_custom_ids.py     # → v7
+
+# 08 精度验证
+python pipeline/08_精度验证/_25_make_gold.py
+python pipeline/08_精度验证/_26_score_gold.py
+```
+
+主交付物在 `results/`:`spans_with_esco.csv`(主)、`final_match_long.csv`(长表)、`gold_validated.csv`(精度证据)。详细复现见 [REPORT.md §6](REPORT.md)。
+
+## 12. 一句话总结
+
+3 层 Tier 兜底的 span → ESCO URI 匹配算法:DeepSeek 验证精度 69%(L 桶 92%),覆盖 38.3% span 出真 ESCO URI,剩余 61.7% 用稳定 custom ID 占位,**100% 有 ID 可用**。
