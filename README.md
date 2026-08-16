@@ -27,7 +27,7 @@
 | unique (span, type) | **31,866** | 去重后待匹配 |
 | ESCO v1.2.0 概念 | 13,939 | L=359, K=3,145, S=10,338, T=97 |
 
-**输入数据约定**:算法的输入是 LKST 4 维标注后的 CSV(11 列),文件名不限,放到 `input_data/` 下自动识别(取最新修改的 .csv;也支持 `SKILL_CSV` 环境变量显式指定)。格式详见 [`data/input_format.md`](data/input_format.md),参考示例见 `data/input_sample.csv`。原始招聘数据保留在 `input_data/`(被 .gitignore 排除,本地保留)。
+**输入数据约定**:算法的输入是 LKST 4 维标注后的 CSV(11 列),文件名不限,放到 `data/` 下自动识别(自动跳过已知非输入文件 + 校验 L/K/S/T 列;也支持 `SKILL_CSV` 环境变量显式指定)。格式详见 [`data/input_format.md`](data/input_format.md),参考示例见 `data/input_sample.csv`。本仓库已包含示例输入 `data/step3_skill_annotation_20260810_012339.csv`(5,140 条,90,625 个标注),clone 后可直接跑。
 
 ## 3. 算法设计 — 3 层 Tier 兜底
 
@@ -164,10 +164,11 @@ span_type_esco_id_linkage/
 │   └── a_prime_summary.md     # 关键数字摘要
 │
 ├── data/                      # 标准库与输入数据
+│   ├── step3_skill_annotation_20260810_012339.csv  # ★ LKST 标注输入(5,140 条)
 │   ├── esco_clean.csv         # 13,939 ESCO 概念 + LKST 映射
-│   ├── spans_unique.csv       # 31,866 unique (span, type) 池
+│   ├── spans_unique.csv       # 31,866 unique (span, type) 池(算法产出)
 │   ├── input_format.md        # 输入 CSV 格式约定(11 列 + LKST 体系)
-│   └── input_sample.csv       # 1 行虚构示例(不放真实数据)
+│   └── input_sample.csv       # 5 行虚构示例
 │
 ├── pipeline/                  # 主流水线(按步骤分目录)
 │   ├── 01_数据准备/
@@ -253,7 +254,7 @@ export DEEPSEEK_API_KEY=sk-...
 pip install sentence-transformers torch transformers requests
 ```
 
-把 LKST 标注 CSV 放到 `input_data/` 下(文件名不限,脚本自动识别),格式见 [`data/input_format.md`](data/input_format.md),参考 `data/input_sample.csv`,然后:
+把 LKST 标注 CSV 放到 `data/` 下(文件名不限,脚本自动识别,本仓库已附一份示例),格式见 [`data/input_format.md`](data/input_format.md),参考 `data/input_sample.csv`,然后:
 
 ```bash
 # 01 数据准备

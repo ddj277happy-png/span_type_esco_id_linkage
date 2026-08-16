@@ -4,18 +4,20 @@
 
 ## 1. 文件位置
 
-把输入 CSV 放到 `input_data/` 下,**文件名不限**,`_02_prep_spans.py` 会自动找该目录下最新的 `.csv`:
+把输入 CSV 放到 `data/` 下,**文件名不限**,`_02_prep_spans.py` 会自动找该目录下最新的、含 L/K/S/T 列的 `.csv`:
 
 ```
 span_type_esco_id_linkage/
-└── input_data/
-    ├── step3_skill_annotation_20260810_012339.csv    ← 自动识别(最新的)
-    └── step3_skill_annotation_20260810_012339.json   ← 不用,仅保留
+└── data/
+    ├── step3_skill_annotation_20260810_012339.csv    ← 自动识别(校验列名后取最新)
+    ├── esco_clean.csv                                (ESCO 标准库,跳过)
+    ├── spans_unique.csv                              (算法输出,跳过)
+    └── input_sample.csv                              (示例,跳过)
 ```
 
-`input_data/` 在 `.gitignore` 里,不会被推到 GitHub,这样原始招聘数据保留在本地。
+脚本会**自动跳过已知非输入文件**(esco_clean、spans_unique 等),并**校验列名**(必须有 L/K/S/T),所以 `data/` 下多个 csv 共存也没问题。
 
-**显式指定**:如果 `input_data/` 下有多个 csv,可以用环境变量 `SKILL_CSV` 指定具体哪个:
+**显式指定**:如果想跳过自动识别,可以用环境变量 `SKILL_CSV` 指定具体文件:
 
 ```bash
 # Linux / macOS

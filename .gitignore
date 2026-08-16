@@ -14,8 +14,8 @@ embeddings/
 models/
 *.npy
 
-# 组员原始数据(input_data/ 是组员 step3 标注的产物,不在本仓库范围)
-input_data/
+# 组员原始数据已挪到 data/step3_skill_annotation_20260810_012339.csv,跟着仓库走
+# input_data/ 不再使用
 
 # ESCO 原始 CSV(可从官方下载,scripts/ 里 _download_esco_en.py 复现)
 esco/
