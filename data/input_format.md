@@ -4,15 +4,28 @@
 
 ## 1. 文件位置
 
-把输入 CSV 放在:
+把输入 CSV 放到 `input_data/` 下,**文件名不限**,`_02_prep_spans.py` 会自动找该目录下最新的 `.csv`:
 
 ```
 span_type_esco_id_linkage/
 └── input_data/
-    └── step3_skill_annotation.csv    ← 你的输入文件
+    ├── step3_skill_annotation_20260810_012339.csv    ← 自动识别(最新的)
+    └── step3_skill_annotation_20260810_012339.json   ← 不用,仅保留
 ```
 
 `input_data/` 在 `.gitignore` 里,不会被推到 GitHub,这样原始招聘数据保留在本地。
+
+**显式指定**:如果 `input_data/` 下有多个 csv,可以用环境变量 `SKILL_CSV` 指定具体哪个:
+
+```bash
+# Linux / macOS
+export SKILL_CSV=/path/to/your_annotation.csv
+
+# Windows PowerShell
+$env:SKILL_CSV = "D:\path\to\your_annotation.csv"
+
+python pipeline/01_数据准备/_02_prep_spans.py
+```
 
 ## 2. 必填列(11 列,顺序固定)
 

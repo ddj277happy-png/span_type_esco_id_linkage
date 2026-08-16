@@ -27,7 +27,7 @@
 | unique (span, type) | **31,866** | 去重后待匹配 |
 | ESCO v1.2.0 概念 | 13,939 | L=359, K=3,145, S=10,338, T=97 |
 
-**输入数据约定**:算法的输入是 LKST 4 维标注后的 CSV(11 列),格式详见 [`data/input_format.md`](data/input_format.md),参考示例见 `data/input_sample.csv`。原始招聘数据放 `input_data/`(被 .gitignore 排除,本地保留)。
+**输入数据约定**:算法的输入是 LKST 4 维标注后的 CSV(11 列),文件名不限,放到 `input_data/` 下自动识别(取最新修改的 .csv;也支持 `SKILL_CSV` 环境变量显式指定)。格式详见 [`data/input_format.md`](data/input_format.md),参考示例见 `data/input_sample.csv`。原始招聘数据保留在 `input_data/`(被 .gitignore 排除,本地保留)。
 
 ## 3. 算法设计 — 3 层 Tier 兜底
 
@@ -253,7 +253,7 @@ export DEEPSEEK_API_KEY=sk-...
 pip install sentence-transformers torch transformers requests
 ```
 
-把 LKST 标注 CSV 放到 `input_data/step3_skill_annotation.csv`(格式见 [`data/input_format.md`](data/input_format.md),参考 `data/input_sample.csv`),然后:
+把 LKST 标注 CSV 放到 `input_data/` 下(文件名不限,脚本自动识别),格式见 [`data/input_format.md`](data/input_format.md),参考 `data/input_sample.csv`,然后:
 
 ```bash
 # 01 数据准备
