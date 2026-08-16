@@ -231,30 +231,46 @@ export DEEPSEEK_API_KEY=sk-...   # 用于 Tier 3
 pip install sentence-transformers torch transformers requests
 ```
 
-数据准备(在 `input_data/` 放原始 LKST 标注 csv,然后):
+数据准备(在 `input_data/` 放原始 LKST 标注 csv,然后按步骤执行):
 
 ```bash
-python scripts/_01_prep_esco.py        # ESCO CSV → esco_clean.csv
-python scripts/_02_prep_spans.py       # 输入标注 → spans_unique.csv
-python scripts/_06_embed_all.py        # 跑 paraphrase-multilingual,按 LKST 分桶存 .npy
-python scripts/_07_match.py            # cos 匹配,出 v1
-python scripts/_13_final_v2.py         # T 桶阈值放宽,出 v2
-python scripts/_15_deepseek_label.py   # DeepSeek 第一轮
-python scripts/_16b_postfix_fast.py    # 缩写字典
-python scripts/_18_tier1_ac.py         # AC substring
-python scripts/_20_merge_llm.py        # DeepSeek 第一轮合并
-python scripts/_21_rerun_review.py     # DeepSeek 第二轮
-python scripts/_22_merge_rerun.py      # 第二轮合并
-python scripts/_23_custom_ids.py       # custom ID 兜底 → v7
-python scripts/_25_make_gold.py        # 200 条 gold 抽样
-python scripts/_26_score_gold.py       # DeepSeek judge → 算精度
+# 01 数据准备
+python pipeline/01_数据准备/_01_prep_esco.py        # ESCO CSV → data/esco_clean.csv
+python pipeline/01_数据准备/_02_prep_spans.py       # 输入标注 → data/spans_unique.csv
+
+# 02 Embedding 生成
+python pipeline/02_Embedding生成/_06_embed_all.py  # 跑 paraphrase-multilingual → embeddings/
+
+# 03 基础匹配
+python pipeline/03_基础匹配/_07_match.py            # cos 匹配,出 v1
+python pipeline/03_基础匹配/_13_final_v2.py         # T 桶阈值放宽,出 v2
+
+# 04 T 桶调参(可选,验证阈值)
+python pipeline/04_T桶调参/_12_inspect_T.py
+
+# 05 字典 + AC
+python pipeline/05_字典与AC/_16b_postfix_fast.py    # 缩写字典
+python pipeline/05_字典与AC/_18_tier1_ac.py         # AC substring
+
+# 06 DeepSeek 仲裁
+python pipeline/06_DeepSeek仲裁/_15_deepseek_label.py   # 第一轮
+python pipeline/06_DeepSeek仲裁/_21_rerun_review.py     # 第二轮补跑
+
+# 07 合并 + 兜底
+python pipeline/07_合并与兜底/_20_merge_llm.py      # 第一轮合并 → v5
+python pipeline/07_合并与兜底/_22_merge_rerun.py    # 第二轮合并 → v6
+python pipeline/07_合并与兜底/_23_custom_ids.py     # custom ID 兜底 → v7
+
+# 08 精度验证
+python pipeline/08_精度验证/_25_make_gold.py        # 200 条 gold 抽样
+python pipeline/08_精度验证/_26_score_gold.py       # DeepSeek judge → 算精度
 ```
 
-主交付物:
+主交付物(`results/` 目录):
 
-- `spans_with_esco.csv`:31,866 unique span × `esco_uri`
-- `final_match_long.csv`:90,625 行长表(含 job 上下文)
-- `gold_validated.csv`:200 条 gold + DeepSeek 验证结果
+- `results/spans_with_esco.csv`:31,866 unique span × `esco_uri`
+- `results/final_match_long.csv`:90,625 行长表(含 job 上下文)
+- `results/gold_validated.csv`:200 条 gold + DeepSeek 验证结果
 - `REPORT.md`:本报告
 
 ---

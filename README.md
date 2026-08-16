@@ -143,53 +143,64 @@ Tier 3: DeepSeek LLM 仲裁          → 命中率 ~19%
 
 matched 数从 5,102 → 12,189,**翻了 2.4 倍**。
 
-## 7. 文件清单
+## 7. 仓库结构
 
-### 7.1 主交付物
-
-| 文件 | 内容 | 用途 |
-|---|---|---|
-| **`spans_with_esco.csv`** | span, type, esco_uri, score, status | 主交付:31,866 unique span 匹配 |
-| **`final_match_long.csv`** | + job_id/company/title/city/lang | 长表:90,625 行(每个出现) |
-| `final_match_v7.csv` | 含 top-3 候选 | 完整版,带推理过程 |
-| `a_prime_summary.md` | 关键数字摘要 | 整体覆盖率/精度等指标 |
-
-### 7.2 中间产物(过程可追溯)
-
-| 文件 | 内容 |
-|---|---|
-| `esco_clean.csv` | 13,939 ESCO 概念 + LKST 映射 |
-| `spans_unique.csv` | 31,866 unique (span, type) 池 |
-| `final_match_v1.csv` ~ `v6.csv` | 演进各阶段 |
-| `postfix_match.csv` | Tier 1 缩写命中(23) |
-| `tier1_ac_match.csv` | Tier 1 AC 命中(72) |
-| `llm_labels.csv` | DeepSeek 第一轮标注(15,997) |
-| `llm_labels_v2.csv` | DeepSeek 第二轮标注(4,741) |
-| `gold_sample.csv` | 200 条 gold 抽样 |
-| `gold_validated.csv` | 200 条 + DeepSeek 验证 |
-| `review_sample.md` | 早期 review 桶抽样 160 条 |
-| `QA_report.md` | 早期质量报告 |
-
-### 7.3 脚本(算法可复现)
-
-| 脚本 | 干啥 |
-|---|---|
-| `_01_prep_esco.py` | ESCO CSV → esco_clean.csv |
-| `_02_prep_spans.py` | 输入标注 CSV → spans_unique.csv |
-| `_06_embed_all.py` | 跑 paraphrase-multilingual,按 LKST 分桶存 .npy |
-| `_07_match.py` | cos 匹配,出 v1 |
-| `_13_final_v2.py` | T 桶阈值放宽,出 v2 |
-| `_15_deepseek_label.py` | DeepSeek 第一轮标注 |
-| `_16b_postfix_fast.py` | 缩写字典 + T 同义词 |
-| `_17_merge.py` | postfix 合到 v3 |
-| `_18_tier1_ac.py` | Tier 1 AC substring |
-| `_19_merge_v4.py` | AC 合到 v4 |
-| `_20_merge_llm.py` | DeepSeek 第一轮合到 v5 |
-| `_21_rerun_review.py` | DeepSeek 第二轮 |
-| `_22_merge_rerun.py` | 第二轮合到 v6 |
-| `_23_custom_ids.py` | 给 no_match 造 custom ID,出 v7 |
-| `_25_make_gold.py` | 抽 200 条 stratified gold |
-| `_26_score_gold.py` | DeepSeek 验证 200 条 → a' |
+```
+span_type_esco_id_linkage/
+├── README.md                  # 本文档
+├── REPORT.md                  # 详细技术报告(算法演进/精度验证/复现步骤)
+├── .gitignore
+│
+├── results/                   # 主交付物
+│   ├── spans_with_esco.csv    # ★ 主交付:31,866 unique span → ESCO URI
+│   ├── final_match_long.csv   # ★ 长表:90,625 行(每个出现)
+│   ├── final_match_v7.csv     # 完整版(含 top-3 候选)
+│   ├── gold_validated.csv     # 200 条 gold + DeepSeek 验证
+│   ├── gold_sample.csv        # 200 条 gold 抽样
+│   ├── postfix_match.csv      # Tier 1 缩写命中(23)
+│   ├── tier1_ac_match.csv     # Tier 1 AC 命中(72)
+│   └── a_prime_summary.md     # 关键数字摘要
+│
+├── data/                      # 标准库与输入数据
+│   ├── esco_clean.csv         # 13,939 ESCO 概念 + LKST 映射
+│   └── spans_unique.csv       # 31,866 unique (span, type) 池
+│
+├── pipeline/                  # 主流水线(按步骤分目录)
+│   ├── 01_数据准备/
+│   │   ├── _01_prep_esco.py
+│   │   ├── _02_prep_spans.py
+│   │   ├── _download_esco.py
+│   │   └── _download_esco_en.py
+│   ├── 02_Embedding生成/
+│   │   └── _06_embed_all.py
+│   ├── 03_基础匹配/
+│   │   ├── _07_match.py
+│   │   └── _13_final_v2.py
+│   ├── 04_T桶调参/
+│   │   └── _12_inspect_T.py
+│   ├── 05_字典与AC/
+│   │   ├── _16b_postfix_fast.py
+│   │   └── _18_tier1_ac.py
+│   ├── 06_DeepSeek仲裁/
+│   │   ├── _15_deepseek_label.py
+│   │   └── _21_rerun_review.py
+│   ├── 07_合并与兜底/
+│   │   ├── _20_merge_llm.py
+│   │   ├── _22_merge_rerun.py
+│   │   └── _23_custom_ids.py
+│   └── 08_精度验证/
+│       ├── _25_make_gold.py
+│       └── _26_score_gold.py
+│
+└── experiments/               # 探索性脚本(调参/失败尝试)
+    ├── _03_load_bge_m3.py
+    ├── _04_smoke.py / _04b_smoke.py / _05_smoke_m3.py
+    ├── _08_inspect.py / _09_inspect_dist.py
+    ├── _10_tier1.py / _10b_tier1.py / _11_finalize.py
+    ├── _14_review_sample.py
+    ├── _16_postfix.py / _17_merge.py / _19_merge_v4.py
+    └── _24_v7_stats.py
+```
 
 ### 7.4 模型/缓存
 
@@ -215,7 +226,7 @@ matched 数从 5,102 → 12,189,**翻了 2.4 倍**。
 - **算法精度 69%**(在 matched 子集上,DeepSeek 独立验证)
 - **L 桶 92%**(语言匹配最准)
 - **兜底机制**:剩余 61.7% 用 custom ID 占位,**每条 span 都有 URI,覆盖率 100%**
-- **下游可用**:`spans_with_esco.csv` 直接对接 ESCO 兼容系统
+- **下游可用**:`results/spans_with_esco.csv` 直接对接 ESCO 兼容系统
 
 适合作为"用 LLM 抽 span + 算法链 ESCO"两阶段方案中的第二阶段实现。
 
