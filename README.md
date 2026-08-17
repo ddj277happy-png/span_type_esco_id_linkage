@@ -29,6 +29,87 @@
 
 **输入数据约定**:算法的输入是 LKST 4 维标注后的 CSV(11 列),文件名不限,放到 `data/` 下自动识别(自动跳过已知非输入文件 + 校验 L/K/S/T 列;也支持 `SKILL_CSV` 环境变量显式指定)。格式详见 [`data/input_format.md`](data/input_format.md),参考示例见 `data/input_sample.csv`。本仓库已包含示例输入 `data/step3_skill_annotation_20260810_012339.csv`(5,140 条,90,625 个标注),clone 后可直接跑。
 
+### 2.5 ESCO 源文件结构与 LKST 映射
+
+ESCO v1.2.0 解压后 `esco/` 目录里有 13 个文件,但 **K/S/T 不是按文件分,是按字段过滤**——所有 13,939 个概念都集中在 `skills_en.csv` 一个主表,其他 `*Collection_en.csv` 是按主题切分的子集,跟 LKST 分类无关。
+
+> ⚠️ **关键容易踩坑**:`skills_en.csv` 里的 `skillType` 字段**只有 `knowledge` 和 `skill/competence` 两个值,没有 T**!T 来自另一个字段 `reuseLevel == 'transversal'`。这两个字段是两套**正交维度**:
+>
+> | 字段 | 取值 | 控制 |
+> |---|---|---|
+> | `skillType` | `knowledge` / `skill/competence` | K vs S |
+> | `reuseLevel` | `transversal` / `cross-sector` / `sector-specific` / `occupation-specific` | T vs 其他 |
+>
+> 同一条 skill 既要有 skillType,也要有 reuseLevel,可以叠加。比如 "show initiative" 同时是 `skill/competence` + `transversal`(既算 S 也算 T)。452 条 `reuseLevel=transversal` 的 skill 里,381 条是 `skill/competence`、71 条是 `knowledge`。
+
+**LKST 过滤规则**(实现见 `pipeline/01_数据准备/_01_prep_esco.py:36-43`,优先级从高到低):
+
+| LKST | 过滤条件 | 涉及字段 |
+|---|---|---|
+| **L** | URI ∈ `languageSkillsCollection_en.csv` | 集合(优先匹配) |
+| **K** | `skillType == 'knowledge'` 且不在 L 集合 | `skillType` |
+| **T** | URI ∈ `transversalSkillsCollection_en.csv` **或** `reuseLevel == 'transversal'` | 集合 + `reuseLevel`(**不是 skillType**) |
+| **S** | 其余 `skillType == 'skill/competence'` | `skillType` |
+
+S 与 T 会重叠(一个 S 如果 `reuseLevel=transversal`,它既算 S 也算 T;L 也会覆盖一部分 K/S/T——language 集合优先)。这是 LKST 4 维标签体系,不是 4 个互斥的分类。
+
+**决策过程(三刀切出 4 个标签)**:
+
+```
+                          (一条 ESCO skill)
+                                │
+                  ┌─────────────┴─────────────┐
+                  │                           │
+            在 lang 集合?                  (不在)
+                  │                           │
+                  ▼                           ▼
+                  L              ┌────────────┴────────────┐
+                                 │                         │
+                          knowledge?                  (非 knowledge)
+                                 │                         │
+                                 ▼                         ▼
+                                 K              ┌──────────┴──────────┐
+                                                │                     │
+                                         transversal?          (非 transversal)
+                                                │                     │
+                                                ▼                     ▼
+                                                T                     S
+```
+
+| 步骤 | 排除的类 | 判断 |
+|---|---|---|
+| 1 | L vs {S, K, T} | `uri in languageSkillsCollection_en.csv` |
+| 2 | K vs {S, T} | `skillType == 'knowledge'` |
+| 3 | T vs S | `uri in transversalSkillsCollection_en.csv` **或** `reuseLevel == 'transversal'` |
+| 4 | 兜底 | 剩下的全是 S |
+
+L 优先,S 兜底,K 和 T 在中间按维度拆。**不是 4 个互斥分类,是 3 刀切出来的 4 个标签**。
+
+**`esco/` 目录里其他 12 个文件做什么用**:
+
+| 文件 | 行数 | 职责 | 跟 LKST 有关吗 |
+|---|---|---|---|
+| `skills_en.csv` | 13,939 | **主表**,所有 skill 概念全在这 | ✅ K/S/T 全部来源 |
+| `languageSkillsCollection_en.csv` | 359 | 语言技能官方子集 | ✅ 决定 L |
+| `transversalSkillsCollection_en.csv` | 95 | 横向技能官方子集(仅 T 的部分,非全部) | ⚠️ T 的一部分 |
+| `digitalSkillsCollection_en.csv` | 1,284 | 数字技能主题子集 | ❌ 按主题切 |
+| `greenSkillsCollection_en.csv` | 591 | 绿色技能主题子集 | ❌ |
+| `digCompSkillsCollection_en.csv` | 25 | DigComp 数字素养框架子集 | ❌ |
+| `researchSkillsCollection_en.csv` | 40 | 研究技能主题子集 | ❌ |
+| `researchOccupationsCollection_en.csv` | 122 | 职业(不是 skill)子集 | ❌ |
+| `conceptSchemes_en.csv` | 19 | scheme 元数据(含「ESCO Skill Pillar concept (sub-) Types」「reusability levels」) | ⚠️ scheme 定义参考 |
+| `skillGroups_en.csv` | — | skill 分组 | ❌ |
+| `skillsHierarchy_en.csv` | — | skill 父子层级 | ❌ |
+| `skillSkillRelations_en.csv` | — | skill 兄弟/关联 | ❌ |
+| `broaderRelationsSkillPillar_en.csv` | — | skill pillar 内的 broader 关系 | ❌ |
+| `broaderRelationsOccPillar_en.csv` | — | occupation pillar 内的 broader 关系 | ❌ |
+| `occupationSkillRelations_en.csv` | 22M | occupation↔skill 关联表(超大) | ❌ |
+| `occupations_en.csv` | 3,008 | 职业主表 | ❌ |
+| `ISCOGroups_en.csv` | — | ISCO 2008 职业分组 | ❌ |
+| `ESCO_v1.2.0_en_csv.zip` | — | 原始压缩包(脚本解压来源) | ❌ |
+
+**一句话**:`skills_en.csv` 一张表 + 字段过滤 = K/S/T。其他 *Collection 文件按主题切,别被文件名唬住当成 K/S/T 分类。
+
 ## 3. 算法设计 — 3 层 Tier 兜底
 
 ```
