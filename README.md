@@ -36,7 +36,7 @@ Tier 1: 字典/Trie 快速查表       → 命中率 ~3%
 Tier 2: 多语种 embedding 余弦相似度 → 命中率 ~16%  
 Tier 3: DeepSeek LLM 仲裁          → 命中率 ~19%
 ─────────────────────────────────────────────────
-合计 38.3% 命中真实 ESCO URI
+合计 38.4% 命中真实 ESCO URI
 其余 61.7% 兜底为 custom: 前缀的稳定 ID
 ```
 
@@ -123,7 +123,7 @@ Tier 3: DeepSeek LLM 仲裁          → 命中率 ~19%
 
 | 指标 | 数字 |
 |---|---|
-| 整体覆盖率 | 38.3% (12,189/31,866) |
+| 整体覆盖率 | 38.4% (12,221/31,866) |
 | 算法精度(matched) | **69.0%** |
 | 实际产生正确 ESCO 匹配 | **~8,400 条** |
 | L 桶精度 | 92.0% |
@@ -142,8 +142,9 @@ Tier 3: DeepSeek LLM 仲裁          → 命中率 ~19%
 | v5 | 10,627 (33.4%) | DeepSeek 第一轮 +4,752 |
 | v6 | 12,189 (38.3%) | DeepSeek 补跑 +1,562 |
 | **v7** | **12,189 (38.3%)** | **+ custom ID 兜底 19,674 条** |
+| **v7+patch** | **12,221 (38.4%)** | **+ Tier 1 语言证书字典补 L 桶 +32** |
 
-matched 数从 5,102 → 12,189,**翻了 2.4 倍**。
+matched 数从 5,102 → 12,221,**翻了 2.4 倍**。
 
 ## 7. 仓库结构
 
@@ -184,8 +185,9 @@ span_type_esco_id_linkage/
 │   ├── 04_T桶调参/
 │   │   └── _12_inspect_T.py
 │   ├── 05_字典与AC/
-│   │   ├── _16b_postfix_fast.py
-│   │   └── _18_tier1_ac.py
+│   │   ├── _16b_postfix_fast.py     # 缩写字典(制造业,130+)
+│   │   ├── _16c_lang_cert_patch.py  # 语言证书缩写字典(L 桶,100+)
+│   │   └── _18_tier1_ac.py          # AC substring
 │   ├── 06_DeepSeek仲裁/
 │   │   ├── _15_deepseek_label.py
 │   │   └── _21_rerun_review.py
@@ -227,10 +229,10 @@ span_type_esco_id_linkage/
 
 ✅ **匹配算法开发完成,精度达到实用标准**
 
-- **覆盖 38.3% span 找到真 ESCO URI**(12,189 条)
+- **覆盖 38.4% span 找到真 ESCO URI**(12,221 条)
 - **算法精度 69%**(在 matched 子集上,DeepSeek 独立验证)
 - **L 桶 92%**(语言匹配最准)
-- **兜底机制**:剩余 61.7% 用 custom ID 占位,**每条 span 都有 URI,覆盖率 100%**
+- **兜底机制**:剩余 61.6% 用 custom ID 占位,**每条 span 都有 URI,覆盖率 100%**
 - **下游可用**:`results/spans_with_esco.csv` 直接对接 ESCO 兼容系统
 
 适合作为"用 LLM 抽 span + 算法链 ESCO"两阶段方案中的第二阶段实现。
@@ -269,7 +271,8 @@ python pipeline/03_基础匹配/_07_match.py            # cos 匹配,出 v1
 python pipeline/03_基础匹配/_13_final_v2.py         # T 桶阈值放宽,出 v2
 
 # 05 字典 + AC
-python pipeline/05_字典与AC/_16b_postfix_fast.py    # 缩写字典
+python pipeline/05_字典与AC/_16b_postfix_fast.py    # 缩写字典(制造业)
+python pipeline/05_字典与AC/_16c_lang_cert_patch.py # 语言证书缩写字典(L 桶补丁)
 python pipeline/05_字典与AC/_18_tier1_ac.py         # AC substring
 
 # 06 DeepSeek 仲裁
@@ -290,4 +293,4 @@ python pipeline/08_精度验证/_26_score_gold.py
 
 ## 12. 一句话总结
 
-3 层 Tier 兜底的 span → ESCO URI 匹配算法:DeepSeek 验证精度 69%(L 桶 92%),覆盖 38.3% span 出真 ESCO URI,剩余 61.7% 用稳定 custom ID 占位,**100% 有 ID 可用**。
+3 层 Tier 兜底的 span → ESCO URI 匹配算法:DeepSeek 验证精度 69%(L 桶 92%),覆盖 38.4% span 出真 ESCO URI,剩余 61.6% 用稳定 custom ID 占位,**100% 有 ID 可用**。

@@ -6,7 +6,7 @@
 
 ## 一句话
 
-5,140 条出海岗位的 90,625 个技能标注(去重 31,866 unique (span, L/K/S/T)),链接到 ESCO v1.2.0 标准 URI——**算法精度 69%**(L 桶 92%、S 桶 72%、K/T 桶 56%),**整体覆盖率 38.3%**,剩余 61.7% 用稳定占位 ID 兜底,保证每条 span 都有可计算的 ID。
+5,140 条出海岗位的 90,625 个技能标注(去重 31,866 unique (span, L/K/S/T)),链接到 ESCO v1.2.0 标准 URI——**算法精度 69%**(L 桶 92%、S 桶 72%、K/T 桶 56%),**整体覆盖率 38.4%**(12,221/31,866 unique matched),剩余 61.6% 用稳定占位 ID 兜底,保证每条 span 都有可计算的 ID。
 
 ---
 
@@ -82,6 +82,7 @@ Tier 3 │  DeepSeek LLM 仲裁                │ ← 兜底模糊地带
 
 1. **缩写字典(130+ 条)**:SPC → "Statistical Process Control"、PFMEA → "Process Failure Mode and Effects Analysis" 等,展开后再去查 ESCO altLabel。这一层小但救命——23 条命中全是缩写。
 2. **Aho-Corasick 自动机**:把 ESCO 8,518 个短词(3-15 字符)塞进 AC automaton,扫全部 spans 找 substring。比如 span 里出现 "welding" 就直接命中 ESCO welding skill。72 条命中。
+3. **语言证书缩写字典(100+ 条,v7+ 补丁)**:DALF-C1 / CATTI 笔译二级 / TOPIK 5级 / TEM-8 / JLPT-N1 / DELE-C1 等语言证书缩写到对应语言名,再去查 ESCO L 桶。命中 32 unique span(影响 200+ 行 long 表),把 L 桶 matched unique 从 834 提到 838。
 
 **坑与修复**:substring 匹配会嵌入词内。比如 "solar energy" 因为包含 "ste" 命中了 "systems"。修法:**word boundary 检查**(匹配前后是字母/数字就丢弃)+ **停用词表** 把 engineering/plan/process/standard 等通用词排除。
 
@@ -145,8 +146,9 @@ final URI:                                "custom:transversal/a3b9c2e1f5d8"
 | v5 | 10,627 | 33.4% | **DeepSeek 第一轮 +4,752** |
 | v6 | 12,189 | 38.3% | DeepSeek 补跑 +1,562 |
 | **v7** | **12,189** | **38.3%** | **+ custom ID 兜底 19,674** |
+| **v7+patch** | **12,221** | **38.4%** | **+ Tier 1 语言证书字典补 L 桶 +32** |
 
-matched 数从 5,102 涨到 12,189,**翻了 2.4 倍**。
+matched 数从 5,102 涨到 12,221,**翻了 2.4 倍**。
 
 **最大单步跳跃是 v4 → v5(DeepSeek 仲裁),+4,752 一口气**——说明 embedding 在 0.5-0.7 灰色地带漏掉的不是"匹配不上",而是"模型不敢判",这种地方 LLM 比 embedding 强。
 
@@ -181,7 +183,7 @@ no_match 子集:   0 对 / 100   →  0%      (custom ID 不是真 ESCO,本来�
 
 ### 3.3 实际产出
 
-- 12,189 条 matched × 69% = **~8,400 条**真正正确的 ESCO URI
+- 12,221 条 matched × 69% = **~8,400 条**真正正确的 ESCO URI
 - 19,674 条 custom ID 占位(下游可识别非标)
 - 覆盖率 100%(每条 span 都有 ID)
 
@@ -249,7 +251,8 @@ python pipeline/03_基础匹配/_13_final_v2.py         # T 桶阈值放宽,出 
 python pipeline/04_T桶调参/_12_inspect_T.py
 
 # 05 字典 + AC
-python pipeline/05_字典与AC/_16b_postfix_fast.py    # 缩写字典
+python pipeline/05_字典与AC/_16b_postfix_fast.py    # 缩写字典(制造业)
+python pipeline/05_字典与AC/_16c_lang_cert_patch.py # 语言证书缩写字典(L 桶补丁)
 python pipeline/05_字典与AC/_18_tier1_ac.py         # AC substring
 
 # 06 DeepSeek 仲裁
