@@ -70,3 +70,11 @@ desktop.ini
 
 # Logs
 *.log
+
+# 一次性 review/diag 文件(诊断用)
+/_diag*.py
+/_patch*.py
+/_extract*.py
+/_L_nomatch_*.txt
+/_preview.txt
+/no_match_review.txt
